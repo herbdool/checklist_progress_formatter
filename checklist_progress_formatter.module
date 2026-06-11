@@ -1,0 +1,186 @@
+<?PHP
+/**
+ * @file
+ * Creates a custom format for boolean fields using an icon.
+ */
+
+/**
+ * Implements hook_library_info().
+ */
+function checklist_progress_formatter_library_info() {
+  $libraries['checklist_progress_formatter.icons'] = array(
+    'title' => 'Boolean checkbox formatter',
+    'css' => array(
+      backdrop_get_path('module', 'checklist_progress_formatter') . '/checklist_progress_formatter.css' => array(),
+    ),
+    'icons' => array(
+      'check-square',
+      'square',
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function checklist_progress_formatter_field_formatter_info() {
+  return array(
+    'checklist_progress' => array(
+      'label' => t('Checklist progress'),
+      'field types' => array(
+        'list_boolean', 'list_text',
+        'list_integer', 'list_float',
+      ),
+      'settings' => array(
+        'progress_bar' => TRUE,
+        'progress_bar_location' => TRUE,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function checklist_progress_formatter_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $field_name = $field['field_name'];
+
+  $element = array();
+
+  if ($display['type'] == 'checklist_progress') {
+    $element['progress_bar'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Display progress bar'),
+      '#description' => t('If checked, a progress bar will be displayed above the checklist.'),
+      '#default_value' => $settings['progress_bar'],
+    );
+    $element['progress_bar_location'] = array(
+      '#type' => 'select',
+      '#options' => array(
+        'above' => t('Above checklist'),
+        'below' => t('Below checklist'),
+      ),
+      '#title' => t('Location'),
+      '#default_value' => $settings['progress_bar_location'],
+      '#states' => array(
+        'visible' => array(
+          ":input[name=\"fields[{$field_name}][settings_edit_form][settings][progress_bar]\"]" => array('checked' => TRUE),
+        ),
+      ),
+      '#indentation' => 1,
+    );
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function checklist_progress_formatter_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = '';
+
+  if ($display['type'] == 'checklist_progress') {
+    $display_progress_bar = $settings['progress_bar'] ? t('Display progress bar') : t('No progress bar');
+    $display_location = '';
+    if ($display_progress_bar) {
+      $display_location = ($settings['progress_bar_location'] == 'above') ? t('above checklist') : t('below checklist');
+    }
+    $summary = t('@progress_bar @location', array('@progress_bar' => $display_progress_bar, '@location' => $display_location));
+  }
+
+  return $summary;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function checklist_progress_formatter_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  if ($display['type'] != 'checklist_progress') {
+    return;
+  }
+
+  backdrop_add_library('checklist_progress_formatter', 'checklist_progress_formatter.icons');
+  $settings = $display['settings'];
+  $progress_bar = $settings['progress_bar'];
+
+  $element = array();
+
+  $allowed_values = (array) list_allowed_values($field);
+  $saved_values = array_column($items, 'value');
+
+  $list_items = array();
+  foreach ($allowed_values as $key => $value) {
+    $is_saved = in_array($key, $saved_values);
+
+    $item_markup = '<span class="checklist-progress-item unchecked">' . check_plain($value) . '</span>';
+
+    if ($is_saved) {
+      $item_markup = '<span class="checklist-progress-item checked">' . check_plain($value) . '</span>';
+    }
+
+    $list_items[] = $item_markup;
+  }
+
+  $build['checklist'] = array(
+    '#type' => 'container',
+  );
+  $build['checklist']['list'] = array(
+    '#theme' => 'item_list',
+    '#items' => $list_items,
+    '#attributes' => array('class' => array('checklist-progress')),
+    '#weight' => 0,
+  );
+
+  // Progress bar.
+  if ($progress_bar) {
+    $num_items_checked = count($saved_values);
+    $total_items = count($allowed_values);
+    $percent_complete = round($num_items_checked / $total_items * 100);
+    $progress_text = t('@complete of @total (@percent%)', array(
+      '@complete' => $num_items_checked,
+      '@total' => $total_items,
+      '@percent' => $percent_complete,
+    ));
+
+    $build['checklist']['progress_bar'] = array(
+      '#type' => 'markup',
+      '#markup' => theme('checklist_progress_bar', array(
+        'message' => $progress_text,
+        'number_complete' => $num_items_checked,
+        'number_of_items' => $total_items,
+        'percent_complete' => $percent_complete,
+      )),
+      '#weight' => ($settings['progress_bar'] == 'above') ? -1 : 1,
+    );
+  }
+
+  $element[0] = $build;
+
+  return $element;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function checklist_progress_formatter_theme() {
+  return [
+    'checklist_progress_bar' => [
+      'path' => backdrop_get_path('module', 'checklist_progress_formatter') . '/templates',
+      'template' => 'checklist-progress-bar',
+      'variables' => [
+        'message' => '&nbsp;',
+        'number_complete' => 0,
+        'number_of_items' => 0,
+        'percent_complete' => 0,
+      ],
+    ],
+  ];
+}

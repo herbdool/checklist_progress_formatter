@@ -1,0 +1,5 @@
+name = Checklist Progress Formatter
+description = Creates a formatter for the progress on list fields, displaying items checked and unchecked.
+package = Fields
+backdrop = 1.x
+type = module

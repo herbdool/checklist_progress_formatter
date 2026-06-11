@@ -1,0 +1,37 @@
+/**
+ * @file
+ * Checklist progress formatter styles
+ */
+
+.item-list ul.checklist-progress {
+  list-style: none;
+  list-style-position: inside;
+  padding-left: 0;
+}
+.checklist-progress-item {
+  position: relative;
+  padding-left: 1.3em;
+}
+.checklist-progress-item.unchecked::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  mask: var(--icon-square) no-repeat center center;
+  background: #000;
+  width: 1em;
+  height: 1em;
+}
+
+.checklist-progress-item.checked::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  mask: var(--icon-check-square) no-repeat center center;
+  background: #000;
+  width: 1em;
+  height: 1em;
+}
