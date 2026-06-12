@@ -1,7 +1,10 @@
 # Checklist Progress Formatter
 
 The Checklist Progress Formatter module allows for list fields to display the
-"progress" towards completing all the items.
+"progress" towards completing all the items in the list.
+
+Note that the formatter only makes sense if the field allows more than one
+value. Otherwise, it'll never progress towards "completion".
 
 ## Installation
 
