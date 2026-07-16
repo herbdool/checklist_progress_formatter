@@ -161,7 +161,7 @@ function checklist_progress_formatter_field_formatter_view(string $entity_type, 
         'number_of_items' => $total_items,
         'percent_complete' => $percent_complete,
       )),
-      '#weight' => ($settings['progress_bar'] == 'above') ? -1 : 1,
+      '#weight' => ($settings['progress_bar_location'] == 'above') ? -1 : 1,
     );
   }
 
