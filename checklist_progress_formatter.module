@@ -146,7 +146,7 @@ function checklist_progress_formatter_field_formatter_view(string $entity_type, 
   if ($progress_bar) {
     $num_items_checked = count($saved_values);
     $total_items = count($allowed_values);
-    $percent_complete = round($num_items_checked / $total_items * 100);
+    $percent_complete = $total_items ? round($num_items_checked / $total_items * 100) : 0;
     $progress_text = t('@complete of @total (@percent%)', array(
       '@complete' => $num_items_checked,
       '@total' => $total_items,
